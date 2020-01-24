@@ -1,7 +1,9 @@
-﻿using System;
+﻿using SampleConsoleApp.Services;
+using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Upstream.CommandLine;
 
@@ -9,25 +11,37 @@ namespace SampleConsoleApp.Commands
 {
     public class FooOptions
     {
+        [Argument(Description = "Foo's counterpart")]
         public string Bar { get; set; }
+
+        [Option("-e", "--easy", "--easy-mode", Description = "Print if it was easy")]
+        public bool EasyMode { get; set; }
     }
 
     public class FooCommand : CommandBase<FooOptions>
     {
-        protected override string Name => "foo";
+        private readonly IRandomService _randomService;
 
-        protected override Argument[] Arguments => new[]
+        public FooCommand(IRandomService randomService)
         {
-            new Argument<string>("bar")
-        };
+            _randomService = randomService;
+        }
 
-        protected override Task ExecuteAsync()
+        protected override Task ExecuteAsync(CancellationToken cancellationToken)
         {
             Console.WriteLine($"When I say \"Foo\", you say \"{Options.Bar}\"!");
+            Console.WriteLine($"Random number: {_randomService.GetInt()}");
 
             Program.Stopwatch.Stop();
 
             Console.WriteLine($"Ellapsed time: {Program.Stopwatch.ElapsedMilliseconds}ms");
+
+            if (Options.EasyMode)
+            {
+                Console.WriteLine("THAT WAS EASY!");
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             return Task.CompletedTask;
         }

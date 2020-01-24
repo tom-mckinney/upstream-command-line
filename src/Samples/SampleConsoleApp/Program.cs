@@ -1,4 +1,6 @@
-﻿using SampleConsoleApp.Commands;
+﻿using Microsoft.Extensions.DependencyInjection;
+using SampleConsoleApp.Commands;
+using SampleConsoleApp.Services;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -15,7 +17,13 @@ namespace SampleConsoleApp
             Stopwatch.Start();
 
             return new CommandLineApplication()
-                .AddCommand<FooCommand>()
+                .AddCommand<FooCommand, FooOptions>("foo")
+                .AddCommand<BarCommand, BarOptions>("bar")
+                .ConfigureServices(services =>
+                {
+                    services.AddTransient<IRandomService, RandomService>();
+                    services.AddTransient<IDeterministicService, DeterministicService>();
+                })
                 .InvokeAsync(args);
         }
     }
