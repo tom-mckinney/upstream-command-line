@@ -13,4 +13,8 @@
     <PackageReference Include="coverlet.collector" Version="1.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Upstream.CommandLine\Upstream.CommandLine.csproj" />
+  </ItemGroup>
+
 </Project>
