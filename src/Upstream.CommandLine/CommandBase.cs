@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Upstream.CommandLine
@@ -6,8 +7,9 @@ namespace Upstream.CommandLine
     public abstract class CommandBase<TOptions> : ICommandAction<TOptions>
         where TOptions : class
     {
-        protected TOptions Options { get; private set; }
+        protected TOptions Options { get; private set; } = null!;
 
+        [MemberNotNull(nameof(Options))]
         public async Task InvokeAsync(TOptions options, CancellationToken cancellationToken)
         {
             Options = options;

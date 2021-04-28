@@ -1,28 +1,37 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Reflection;
-using System.Text;
 
 namespace Upstream.CommandLine
 {
     public class OptionAttribute : CommandSymbolAttribute
     {
-        private static readonly object _uninitializedDefaultValue = new object();
+        private static readonly object _uninitializedDefaultValue = new();
+        private object _defaultValue = _uninitializedDefaultValue;
 
         public OptionAttribute(params string[] aliases)
         {
             Aliases = aliases;
         }
 
-        public string[] Aliases { get; set; }
+        public string[]? Aliases { get; set; }
 
-        public SymbolType Type { get; set; }
+        public SymbolType? Type { get; set; }
 
-        public bool Required { get; set; } = false;
+        public bool IsRequired { get; set; } = false;
 
-        public object DefaultValue { get; set; } = _uninitializedDefaultValue;
+        public object DefaultValue
+        {
+            get => _defaultValue;
+            set
+            {
+                _defaultValue = value;
+                SetDefaultValue = () => DefaultValue;
+            }
+        }
+
+        public Func<object?>? SetDefaultValue { get; private set; }
 
         public bool HasDefaultValue => DefaultValue != _uninitializedDefaultValue;
 
@@ -30,29 +39,15 @@ namespace Upstream.CommandLine
         {
             var aliases = Aliases?.Length > 0 ? Aliases : new[] { property.Name.ToKebabCase() };
 
-            var option = new Option(aliases);
+            var option = new Option(
+                aliases,
+                description: Description,
+                getDefaultValue: SetDefaultValue,
+                argumentType: property.PropertyType);
 
-            if (Type == SymbolType.Default)
+            if (IsRequired)
             {
-                option.Argument = new Argument(Name)
-                {
-                    ArgumentType = property.PropertyType
-                };
-            }
-
-            if (!string.IsNullOrEmpty(Description))
-            {
-                option.Description = Description;
-            }
-
-            if (Required)
-            {
-                option.Required = true;
-            }
-
-            if (HasDefaultValue)
-            {
-                option.Argument.SetDefaultValue(DefaultValue);
+                option.IsRequired = true;
             }
 
             return option;

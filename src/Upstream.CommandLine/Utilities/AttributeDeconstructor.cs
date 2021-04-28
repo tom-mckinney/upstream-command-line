@@ -1,21 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace Upstream.CommandLine.Utilities
 {
-    public class AttributeDeconstructor
+    public static class AttributeDeconstructor
     {
         public static List<Symbol> GetSymbols(Type type)
         {
-            List<Symbol> symbols = new List<Symbol>();
+            var symbols = new List<Symbol>();
 
             foreach (var prop in type.GetProperties())
             {
-                if (TryGetSymbol(prop, out Symbol symbol))
+                if (TryGetSymbol(prop, out Symbol? symbol))
                 {
                     symbols.Add(symbol);
                 }
@@ -24,14 +24,14 @@ namespace Upstream.CommandLine.Utilities
             return symbols;
         }
 
-        public static bool TryGetSymbol(PropertyInfo prop, out Symbol symbol)
+        public static bool TryGetSymbol(PropertyInfo prop, [NotNullWhen(true)] out Symbol? symbol)
         {
             symbol = GetSymbol(prop);
 
             return symbol != null;
         }
 
-        public static Symbol GetSymbol(PropertyInfo prop)
+        public static Symbol? GetSymbol(PropertyInfo prop)
         {
             var attribute = (CommandSymbolAttribute[])Attribute.GetCustomAttributes(prop, typeof(CommandSymbolAttribute));
 
