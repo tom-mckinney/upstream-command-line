@@ -8,7 +8,7 @@ using Upstream.CommandLine;
 
 namespace SampleConsoleApp
 {
-    public class Program
+    public static class Program
     {
         public static Stopwatch Stopwatch { get; } = new Stopwatch();
 

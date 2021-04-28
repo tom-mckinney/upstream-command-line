@@ -7,7 +7,7 @@ namespace Upstream.CommandLine
 {
     public class ArgumentAttribute : CommandSymbolAttribute
     {
-        private static readonly object _uninitializedDefaultValue = new object();
+        private static readonly object _uninitializedDefaultValue = new();
 
         public ArgumentAttribute()
         {

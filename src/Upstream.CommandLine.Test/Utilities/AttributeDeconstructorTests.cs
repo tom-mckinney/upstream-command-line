@@ -64,10 +64,10 @@ namespace Upstream.CommandLine.Test.Utilities
             var reasonProperty = type.GetProperty(nameof(GoodOptions.Reason));
             var reasonOption = (Option)AttributeDeconstructor.GetSymbol(reasonProperty);
             Assert.Equal(2, reasonOption.Aliases.Count);
-            Assert.Contains("r", reasonOption.Aliases);
-            Assert.Contains("reason", reasonOption.Aliases);
+            Assert.Contains("-r", reasonOption.Aliases);
+            Assert.Contains("--reason", reasonOption.Aliases);
             Assert.Equal("Reason for doing the thing", reasonOption.Description);
-            Assert.Equal(reasonProperty.PropertyType, reasonOption.Argument.ArgumentType);
+            Assert.Equal(reasonProperty.PropertyType, reasonOption.ValueType);
         }
     }
 }

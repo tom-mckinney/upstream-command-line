@@ -12,10 +12,10 @@ jobs:
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '3.1.100' # SDK Version to use.
+        dotnet-version: '5.0.x'
 
     - name: Run xunit tests
       run: dotnet test ./src/
@@ -28,10 +28,10 @@ jobs:
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '3.1.100' # SDK Version to use.
+        dotnet-version: '5.0.x'
 
     - name: Create NuGet package
       run: |
@@ -39,9 +39,9 @@ jobs:
         FILTER="refs/tags/v"
         export VERSION="${REF//$FILTER}"
         echo "Building Upstream.CommandLine v${VERSION}"
-        dotnet pack --configuration Release --output nupkgs ./src/Upstream.CommandLine
+        dotnet pack --configuration Release --output nupkg ./src/Upstream.CommandLine
 
     - name: Publish NuGet package ${{ github.ref }}
       run: |
-        PACKAGE=$(find ./nupkgs/ -name "Upstream.CommandLine.*.nupkg")
+        PACKAGE=$(find ./nupkg/ -name "Upstream.CommandLine.*.nupkg")
         dotnet nuget push $PACKAGE -k ${{ secrets.NuGetApiKey }} -s https://api.nuget.org/v3/index.json

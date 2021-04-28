@@ -16,6 +16,9 @@ namespace SampleConsoleApp.Commands
 
         [Option("-e", "--easy", "--easy-mode", Description = "Print if it was easy")]
         public bool EasyMode { get; set; }
+
+        [Option("-w", "--wumbo", DefaultValue = "Yes it does", Description = "Does it Wumbo?")]
+        public string Wumbo { get; set; }
     }
 
     public class FooCommand : CommandBase<FooOptions>
@@ -31,6 +34,7 @@ namespace SampleConsoleApp.Commands
         {
             Console.WriteLine($"When I say \"Foo\", you say \"{Options.Bar}\"!");
             Console.WriteLine($"Random number: {_randomService.GetInt()}");
+            Console.WriteLine($"Does it Wumbo?: {Options.Wumbo}");
 
             Program.Stopwatch.Stop();
 
