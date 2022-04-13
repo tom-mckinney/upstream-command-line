@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Upstream.CommandLine\Upstream.CommandLine.csproj" />
+    <ProjectReference Include="..\..\src\Upstream.CommandLine\Upstream.CommandLine.csproj" />
   </ItemGroup>
 
 </Project>
