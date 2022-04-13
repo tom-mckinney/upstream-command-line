@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
+using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
@@ -61,17 +63,24 @@ namespace Upstream.CommandLine
 
             foreach (var symbol in AttributeDeconstructor.GetSymbols(typeof(TOptions)))
             {
-                command.Add(symbol);
+                if (symbol is Argument argument)
+                {
+                    command.Add(argument);
+                }
+                else if (symbol is Option option)
+                {
+                    command.Add(option);
+                }
             }
 
-            _builder.AddCommand(command);
+            _builder.Command.AddCommand(command);
 
             return this;
         }
 
         public CommandLineApplication AddCommand(System.CommandLine.Command command)
         {
-            _builder.AddCommand(command);
+            _builder.Command.AddCommand(command);
 
             return this;
         }

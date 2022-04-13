@@ -33,27 +33,27 @@ namespace Upstream.CommandLine.Test.Utilities
             var fooArg = (Argument)AttributeDeconstructor.GetSymbol(fooProperty);
             Assert.Equal("foo", fooArg.Name);
             Assert.False(fooArg.HasDefaultValue);
-            Assert.Equal(fooProperty.PropertyType, fooArg.ArgumentType);
+            Assert.Equal(fooProperty.PropertyType, fooArg.ValueType);
 
             var barrProperty = type.GetProperty(nameof(GoodOptions.Bar));
             var barrArg = (Argument)AttributeDeconstructor.GetSymbol(barrProperty);
             Assert.Equal("barr", barrArg.Name);
             Assert.False(barrArg.HasDefaultValue);
-            Assert.Equal(barrProperty.PropertyType, barrArg.ArgumentType);
+            Assert.Equal(barrProperty.PropertyType, barrArg.ValueType);
 
             var wumboProperty = type.GetProperty(nameof(GoodOptions.Wumbo));
             var wumboArg = (Argument)AttributeDeconstructor.GetSymbol(wumboProperty);
             Assert.Equal("wumbo", wumboArg.Name);
             Assert.True(wumboArg.HasDefaultValue);
             Assert.Equal(11, wumboArg.GetDefaultValue());
-            Assert.Equal(wumboProperty.PropertyType, wumboArg.ArgumentType);
+            Assert.Equal(wumboProperty.PropertyType, wumboArg.ValueType);
 
             var fooBarProperty = type.GetProperty(nameof(GoodOptions.FooBar));
             var fooBarArg = (Argument)AttributeDeconstructor.GetSymbol(fooBarProperty);
             Assert.Equal("foo-bar", fooBarArg.Name);
             Assert.True(fooBarArg.HasDefaultValue);
             Assert.Null(fooBarArg.GetDefaultValue());
-            Assert.Equal(fooBarProperty.PropertyType, fooBarArg.ArgumentType);
+            Assert.Equal(fooBarProperty.PropertyType, fooBarArg.ValueType);
         }
 
         [Fact]
