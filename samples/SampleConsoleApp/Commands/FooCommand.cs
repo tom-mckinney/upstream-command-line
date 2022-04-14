@@ -36,10 +36,6 @@ namespace SampleConsoleApp.Commands
             Console.WriteLine($"Random number: {_randomService.GetInt()}");
             Console.WriteLine($"Does it Wumbo?: {Options.Wumbo}");
 
-            Program.Stopwatch.Stop();
-
-            Console.WriteLine($"Ellapsed time: {Program.Stopwatch.ElapsedMilliseconds}ms");
-
             if (Options.EasyMode)
             {
                 Console.WriteLine("THAT WAS EASY!");

@@ -6,17 +6,19 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Upstream.CommandLine;
 
-namespace SampleConsoleApp
+namespace SampleConsoleApp;
+
+public static class Program
 {
-    public static class Program
+    public static Stopwatch Stopwatch { get; } = new Stopwatch();
+
+    public static async Task Main(string[] args)
     {
-        public static Stopwatch Stopwatch { get; } = new Stopwatch();
+        Stopwatch.Start();
 
-        public static Task Main(string[] args)
+        try
         {
-            Stopwatch.Start();
-
-            return new CommandLineApplication()
+            await new CommandLineApplication()
                 .AddCommand<FooCommand, FooOptions>("foo")
                 .AddCommand<BarCommand, BarOptions>("bar")
                 .ConfigureServices(services =>
@@ -26,5 +28,13 @@ namespace SampleConsoleApp
                 })
                 .InvokeAsync(args);
         }
+        finally
+        {
+            Stopwatch.Stop();
+
+            Console.WriteLine($"Ellapsed time: {Program.Stopwatch.ElapsedMilliseconds}ms");
+        }
+
     }
 }
+

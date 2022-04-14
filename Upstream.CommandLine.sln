@@ -21,6 +21,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Upstream.CommandLine.Test",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleConsoleApp", "samples\SampleConsoleApp\SampleConsoleApp.csproj", "{DAD639A6-EE97-4312-8A04-C6BC41482B7E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{582D982D-9B52-4D4D-BBC3-4C31AD30A0B2}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\draft-release.yml = .github\workflows\draft-release.yml
+		.github\workflows\publish.yml = .github\workflows\publish.yml
+		.github\workflows\test.yml = .github\workflows\test.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +82,7 @@ Global
 		{B8AF2678-71C3-4359-8219-F3FEECAE29F7} = {DA5E2480-7DCD-4BF0-87A0-166D4D83E4FB}
 		{66E38394-3CB1-4DFF-8A13-6C64954D8E7A} = {76B28BA3-8900-49C5-8DA4-FBA2890BAD21}
 		{DAD639A6-EE97-4312-8A04-C6BC41482B7E} = {5AF002E1-36F5-453A-B6E6-B2A1B045D0C6}
+		{582D982D-9B52-4D4D-BBC3-4C31AD30A0B2} = {A3359C35-8995-415B-ABFA-570B13EA2418}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3AB63870-EDC6-4430-B433-076496491E80}
