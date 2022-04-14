@@ -2,6 +2,7 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Reflection;
+using Upstream.CommandLine.Extensions;
 
 namespace Upstream.CommandLine
 {
@@ -32,7 +33,7 @@ namespace Upstream.CommandLine
         {
             var argument = new Argument(Name ?? property.Name.ToKebabCase())
             {
-                ArgumentType = property.PropertyType
+                ValueType = property.PropertyType
             };
 
             if (!string.IsNullOrEmpty(Description))

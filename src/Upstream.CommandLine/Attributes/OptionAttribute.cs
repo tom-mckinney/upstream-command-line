@@ -2,6 +2,7 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Reflection;
+using Upstream.CommandLine.Extensions;
 
 namespace Upstream.CommandLine
 {
