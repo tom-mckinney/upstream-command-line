@@ -60,10 +60,6 @@ namespace SampleConsoleApp.Commands
                 Console.WriteLine($"Bar is: {options.Other}");
             }
 
-            Program.Stopwatch.Stop();
-
-            Console.WriteLine($"Ellapsed time: {Program.Stopwatch.ElapsedMilliseconds}ms");
-
             cancellationToken.ThrowIfCancellationRequested();
 
             Console.ResetColor();
