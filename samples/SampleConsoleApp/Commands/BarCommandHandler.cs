@@ -35,7 +35,7 @@ namespace SampleConsoleApp.Commands
             _deterministicService = deterministicService;
         }
 
-        public Task<int> InvokeAsync(BarCommand options, CancellationToken cancellationToken)
+        public Task<int> ExecuteAsync(BarCommand options, CancellationToken cancellationToken)
         {
             switch (options.Color)
             {
