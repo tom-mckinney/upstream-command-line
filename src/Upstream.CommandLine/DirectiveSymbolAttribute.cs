@@ -5,7 +5,7 @@ using System.Reflection;
 namespace Upstream.CommandLine
 {
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-    public abstract class CommandSymbolAttribute : Attribute
+    public abstract class DirectiveSymbolAttribute : Attribute
     {
         public string? Name { get; set; }
 

@@ -1,12 +1,10 @@
-﻿using System;
-using System.CommandLine;
-using System.CommandLine.Parsing;
+﻿using System.CommandLine;
 using System.Reflection;
 using Upstream.CommandLine.Extensions;
 
 namespace Upstream.CommandLine
 {
-    public class ArgumentAttribute : CommandSymbolAttribute
+    public class ArgumentAttribute : DirectiveSymbolAttribute
     {
         private static readonly object _uninitializedDefaultValue = new();
 

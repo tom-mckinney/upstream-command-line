@@ -1,13 +1,12 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.CommandLine;
 using System.CommandLine.Builder;
-using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Upstream.CommandLine.Utilities;
 
 namespace Upstream.CommandLine
@@ -40,36 +39,55 @@ namespace Upstream.CommandLine
             return _builder.Build().InvokeAsync(args);
         }
 
-        public CommandLineApplication AddCommand<TAction, TOptions>(string name, string? description = null)
-            where TAction : class, ICommandAction<TOptions>
-            where TOptions : class
+        public CommandLineApplication AddCommand<THandler, TCommand>()
+            where THandler : class, ICommandHandler<TCommand>
+            where TCommand : class
         {
-            _services.AddScoped<TAction>();
+            var type = typeof(TCommand);
+            
+            var (name, description) = AttributeDeconstructor.GetCommandInfo(type);
 
-            var command = new System.CommandLine.Command(name, description)
+            return AddCommand<THandler, TCommand>(type, name, description);
+        }
+
+        public CommandLineApplication AddCommand<THandler, TCommand>(string name, string? description = null)
+            where THandler : class, ICommandHandler<TCommand>
+            where TCommand : class
+        {
+            return AddCommand<THandler, TCommand>(typeof(TCommand), name, description);
+        }
+        
+        public CommandLineApplication AddCommand<THandler, TCommand>(Type type, string name, string? description = null)
+            where THandler : class, ICommandHandler<TCommand>
+            where TCommand : class
+        {
+            _services.AddSingleton<THandler>();
+
+            var command = new Command(name, description)
             {
-                Handler = CommandHandler.Create<TOptions, CancellationToken>((options, cancellationToken) =>
+                Handler = CommandHandler.Create<TCommand, CancellationToken>((command, cancellationToken) =>
                 {
                     if (ServiceProvider == null)
                     {
                         throw new InvalidOperationException("Command was invoked without building ServiceProvider");
                     }
 
-                    var action = ServiceProvider.GetRequiredService<TAction>();
+                    var internalHandler = ServiceProvider.GetRequiredService<THandler>();
 
-                    return action.InvokeAsync(options, cancellationToken);
+                    return internalHandler.InvokeAsync(command, cancellationToken);
                 })
             };
 
-            foreach (var symbol in AttributeDeconstructor.GetSymbols(typeof(TOptions)))
+            foreach (var symbol in AttributeDeconstructor.GetSymbols(type))
             {
-                if (symbol is Argument argument)
+                switch (symbol)
                 {
-                    command.Add(argument);
-                }
-                else if (symbol is Option option)
-                {
-                    command.Add(option);
+                    case Argument argument:
+                        command.Add(argument);
+                        break;
+                    case Option option:
+                        command.Add(option);
+                        break;
                 }
             }
 
@@ -78,7 +96,7 @@ namespace Upstream.CommandLine
             return this;
         }
 
-        public CommandLineApplication AddCommand(System.CommandLine.Command command)
+        public CommandLineApplication AddCommand(Command command)
         {
             _builder.Command.AddCommand(command);
 

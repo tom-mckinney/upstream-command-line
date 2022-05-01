@@ -1,15 +1,13 @@
-﻿using SampleConsoleApp.Services;
-using System;
-using System.Collections.Generic;
-using System.CommandLine;
-using System.Text;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using SampleConsoleApp.Services;
 using Upstream.CommandLine;
 
 namespace SampleConsoleApp.Commands
 {
-    public class FooOptions
+    [Command("foo", "Foo is the name of the command")]
+    public class FooCommand
     {
         [Argument(Description = "Foo's counterpart")]
         public string Bar { get; set; }
@@ -21,29 +19,29 @@ namespace SampleConsoleApp.Commands
         public string Wumbo { get; set; }
     }
 
-    public class FooCommand : CommandBase<FooOptions>
+    public class FooCommandHandler : CommandHandler<FooCommand>
     {
         private readonly IRandomService _randomService;
 
-        public FooCommand(IRandomService randomService)
+        public FooCommandHandler(IRandomService randomService)
         {
             _randomService = randomService;
         }
 
-        protected override Task ExecuteAsync(CancellationToken cancellationToken)
+        protected override Task<int> ExecuteAsync(FooCommand command, CancellationToken cancellationToken)
         {
-            Console.WriteLine($"When I say \"Foo\", you say \"{Options.Bar}\"!");
+            Console.WriteLine($"When I say \"Foo\", you say \"{command.Bar}\"!");
             Console.WriteLine($"Random number: {_randomService.GetInt()}");
-            Console.WriteLine($"Does it Wumbo?: {Options.Wumbo}");
+            Console.WriteLine($"Does it Wumbo?: {command.Wumbo}");
 
-            if (Options.EasyMode)
+            if (command.EasyMode)
             {
                 Console.WriteLine("THAT WAS EASY!");
             }
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            return Task.CompletedTask;
+            return Task.FromResult(0);
         }
     }
 }
