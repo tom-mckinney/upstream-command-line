@@ -12,7 +12,7 @@ A wrapper around `System.CommandLine` to allow for large, service-oriented appli
 
 Add the package as a dependency to your .NET project via the following command:
 ```
-dotnet add package Upstream.CommandLine --prerelease
+dotnet add package Upstream.CommandLine
 ```
 
 ## Usage
@@ -25,22 +25,23 @@ public static class Program
     public static Task Main(string[] args)
     {
         return new CommandLineApplication()
-            .AddCommand<FooCommand, FooOptions>("foo")
+            .AddCommand<FooCommand, FooOptions>()
             .ConfigureServices(services =>
             {
-                services.AddTransient<IBarService, BarService>();
+                services.AddSingleton<IBarService, BarService>();
             })
             .InvokeAsync(args);
     }
 }
 
-public class FooOptions
+[Command("foo")]
+public class FooCommand
 {
     [Argument(Description = "Drink order at the Bar")]
     public string Drink { get; set; }
 }
 
-public class FooCommand : CommandBase<FooOptions>
+public class FooCommandHandler : CommandHandler<FooCommand>
 {
     private readonly IBarService _barService;
 
@@ -49,13 +50,15 @@ public class FooCommand : CommandBase<FooOptions>
         _barService = barService;
     }
 
-    protected override Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task<int> ExecuteAsync(FooCommand command, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        Console.WriteLine($"Foo walks into a Bar and orders a {_barService.Order(Options.Drink)}");
+        Console.WriteLine($"Foo walks into a Bar and orders a {command.Drink}");
+        
+        await _barService.OrderAsync(command.Drink);
 
-        return Task.CompletedTask;
+        return 0;
     }
 }
 ```
