@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Upstream.CommandLine
+namespace Upstream.CommandLine.Exceptions
 {
     public class CommandLineException : Exception
     {

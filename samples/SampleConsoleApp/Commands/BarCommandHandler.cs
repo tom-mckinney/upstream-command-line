@@ -1,8 +1,7 @@
-﻿using SampleConsoleApp.Services;
-using System;
-using System.CommandLine;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using SampleConsoleApp.Services;
 using Upstream.CommandLine;
 
 namespace SampleConsoleApp.Commands
@@ -15,7 +14,7 @@ namespace SampleConsoleApp.Commands
         Red,
     }
 
-    public class BarOptions
+    public class BarCommand
     {
         [Argument(Description = "Bar's counterpart")]
         public string Foo { get; set; }
@@ -27,16 +26,16 @@ namespace SampleConsoleApp.Commands
         public Color Color { get; set; }
     }
 
-    public class BarCommand : ICommandAction<BarOptions>
+    public class BarCommandHandler : ICommandHandler<BarCommand>
     {
         private readonly IDeterministicService _deterministicService;
 
-        public BarCommand(IDeterministicService deterministicService)
+        public BarCommandHandler(IDeterministicService deterministicService)
         {
             _deterministicService = deterministicService;
         }
 
-        public Task InvokeAsync(BarOptions options, CancellationToken cancellationToken)
+        public Task<int> InvokeAsync(BarCommand options, CancellationToken cancellationToken)
         {
             switch (options.Color)
             {
@@ -64,7 +63,7 @@ namespace SampleConsoleApp.Commands
 
             Console.ResetColor();
 
-            return Task.CompletedTask;
+            return Task.FromResult(0);
         }
     }
 }
