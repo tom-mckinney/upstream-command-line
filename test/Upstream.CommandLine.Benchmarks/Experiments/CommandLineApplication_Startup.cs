@@ -89,16 +89,16 @@ namespace Upstream.CommandLine.Benchmarks.Experiments
         }
 
 
-        public class FooHandler : CommandHandler<FooHandler.FooCommand>
+        public class FooHandler : ICommandHandler<FooHandler.FooCommand>
         {
             [Command("foo")]
             public class FooCommand
             {
                 [Option("-b", "--bar", IsRequired = true)]
-                public string Bar { get; set; }
+                public string Bar { get; set; } = null!;
             }
             
-            protected override Task<int> ExecuteAsync(FooCommand command, CancellationToken cancellationToken)
+            public Task<int> ExecuteAsync(FooCommand command, CancellationToken cancellationToken)
             {
                 return Task.FromResult(command.Bar.GetHashCode());
             }
@@ -109,7 +109,7 @@ namespace Upstream.CommandLine.Benchmarks.Experiments
             public class Settings : Spectre.Console.Cli.CommandSettings
             {
                 [Spectre.Console.Cli.CommandOption("-b|--bar")]
-                public string Bar { get; set; }
+                public string Bar { get; set; } = null!;
             }
 
             public override int Execute([NotNull] Spectre.Console.Cli.CommandContext context, [NotNull] Settings settings)

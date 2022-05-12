@@ -6,6 +6,6 @@ namespace Upstream.CommandLine
     public interface ICommandHandler<in TCommand>
         where TCommand : class
     {
-        Task<int> InvokeAsync(TCommand options, CancellationToken cancellationToken);
+        Task<int> ExecuteAsync(TCommand options, CancellationToken cancellationToken);
     }
 }

@@ -19,7 +19,7 @@ namespace SampleConsoleApp.Commands
         public string Wumbo { get; set; }
     }
 
-    public class FooCommandHandler : CommandHandler<FooCommand>
+    public class FooCommandHandler : ICommandHandler<FooCommand>
     {
         private readonly IRandomService _randomService;
 
@@ -28,7 +28,7 @@ namespace SampleConsoleApp.Commands
             _randomService = randomService;
         }
 
-        protected override Task<int> ExecuteAsync(FooCommand command, CancellationToken cancellationToken)
+        public Task<int> ExecuteAsync(FooCommand command, CancellationToken cancellationToken)
         {
             Console.WriteLine($"When I say \"Foo\", you say \"{command.Bar}\"!");
             Console.WriteLine($"Random number: {_randomService.GetInt()}");

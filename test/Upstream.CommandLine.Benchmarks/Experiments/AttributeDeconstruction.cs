@@ -59,12 +59,12 @@ public class AttributeDeconstruction
     public class FooCommand
     {
         [Argument(Description = "Foo's counterpart")]
-        public string Bar { get; set; }
+        public string Bar { get; set; } = null!;
 
         [Option("-e", "--easy", "--easy-mode", Description = "Print if it was easy")]
         public bool EasyMode { get; set; }
 
         [Option("-w", "--wumbo", DefaultValue = "Yes it does", Description = "Does it Wumbo?")]
-        public string Wumbo { get; set; }
+        public string? Wumbo { get; set; }
     }
 }
