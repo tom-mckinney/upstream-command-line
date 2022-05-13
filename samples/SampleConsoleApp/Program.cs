@@ -38,13 +38,13 @@ namespace SampleConsoleApp
             return new CommandLineApplication()
                 .AddCommand<FooCommandHandler, FooCommand>()
                 .AddCommand<BarCommandHandler, BarCommand>("bar")
-                .AddCommand<NestedCommandHandler, NestedCommandHandler.GizmoCommand>(builder =>
+                .AddCommandGroup("gizmo", builder =>
                 {
-                    builder.AddSubCommand<NestedCommandHandler, NestedCommandHandler.GadgetCommand>(builder =>
+                    builder.AddCommandGroup("gadget", builder =>
                     {
-                        builder.AddSubCommand<NestedCommandHandler, NestedCommandHandler.WidgetCommand>();
+                        builder.AddCommand<NestedCommandHandler, NestedCommandHandler.WidgetCommand>();
                     });
-                    builder.AddSubCommand<NestedCommandHandler, NestedCommandHandler.WumboCommand>();
+                    builder.AddCommand<NestedCommandHandler, NestedCommandHandler.WumboCommand>();
                 })
                 .ConfigureServices(services =>
                 {

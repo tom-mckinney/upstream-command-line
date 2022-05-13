@@ -5,21 +5,9 @@ using Upstream.CommandLine;
 
 namespace SampleConsoleApp.Commands;
 
-public class NestedCommandHandler : ICommandHandler<NestedCommandHandler.GizmoCommand>, 
-    ICommandHandler<NestedCommandHandler.GadgetCommand>, 
-    ICommandHandler<NestedCommandHandler.WidgetCommand>,
+public class NestedCommandHandler : ICommandHandler<NestedCommandHandler.WidgetCommand>,
     ICommandHandler<NestedCommandHandler.WumboCommand>
 {
-    [Command("gizmo")]
-    public class GizmoCommand
-    {
-    }
-
-    [Command("gadget")]
-    public class GadgetCommand
-    {
-    }
-    
     [Command("widget")]
     public class WidgetCommand
     {
@@ -28,22 +16,10 @@ public class NestedCommandHandler : ICommandHandler<NestedCommandHandler.GizmoCo
     [Command("wumbo")]
     public class WumboCommand
     {
+        [Option("-g", "--good", "--is-good")]
+        public bool IsGood { get; init; }
     }
 
-    public Task<int> ExecuteAsync(GizmoCommand options, CancellationToken cancellationToken)
-    {
-        Console.WriteLine("Gizmo!");
-
-        return Task.FromResult(0);
-    }
-
-    public Task<int> ExecuteAsync(GadgetCommand options, CancellationToken cancellationToken)
-    {
-        Console.WriteLine("Gadget!");
-
-        return Task.FromResult(0);
-    }
-    
     public Task<int> ExecuteAsync(WidgetCommand options, CancellationToken cancellationToken)
     {
         Console.WriteLine("Widget!");
@@ -53,6 +29,6 @@ public class NestedCommandHandler : ICommandHandler<NestedCommandHandler.GizmoCo
 
     public Task<int> ExecuteAsync(WumboCommand options, CancellationToken cancellationToken)
     {
-        throw new SampleException("Wumbo!");
+        throw new SampleException($"Wumbo! {options.IsGood}");
     }
 }
