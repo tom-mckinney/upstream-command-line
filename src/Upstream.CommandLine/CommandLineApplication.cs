@@ -2,47 +2,53 @@
 using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
-using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Upstream.CommandLine.Utilities;
 
 namespace Upstream.CommandLine
 {
-    public class CommandLineApplication : ICommandBuilder
+    /// <summary>
+    /// Entrypoint for a Command Line Application.
+    /// Can be used to configure commands, services, and middleware.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// await new CommandLineApplication()
+    ///     .AddCommand&lt;HelloHandler, HelloCommand&gt;()
+    ///     .InvokeAsync(args);
+    /// </code>
+    /// </example>
+    public class CommandLineApplication
     {
         private readonly IServiceCollection _services = new ServiceCollection();
-        private readonly CommandLineBuilder _builder;
-
-        public CommandLineApplication()
+        private readonly CommandBuilder _builder;
+        
+        /// <summary>
+        /// Initializes an instance of <see cref="CommandLineApplication"/>
+        /// </summary>
+        /// <param name="applicationName">Name of application root command</param>
+        public CommandLineApplication(string? applicationName = null)
         {
-            _builder = new CommandLineBuilder() // UseDefaults() except with custom exception handler
-                .UseVersionOption()
-                .UseHelp()
-                .UseEnvironmentVariableDirective()
-                .UseParseDirective()
-                .UseSuggestDirective()
-                .RegisterWithDotnetSuggest()
-                .UseTypoCorrections()
-                .UseParseErrorReporting()
-                .CancelOnProcessTermination();
+            _builder = new CommandBuilder(_services, applicationName);
         }
-        
-        internal IServiceProvider? ServiceProvider { get; set; }
-        
-        internal Command? CurrentCommand { get; set; }
 
         /// <summary>
-        /// Allows direct configuration of the underlying <see cref="CommandLineBuilder"/>
+        /// Provides access to the <see cref="CommandBuilder"/>'s <see cref="IServiceProvider"/>
+        /// </summary>
+        /// <remarks>
+        /// Declared as <c>internal</c> for testing purposes
+        /// </remarks>
+        internal IServiceProvider? ServiceProvider => _builder.ServiceProvider;
+
+        /// <summary>
+        /// Allows direct configuration of the underlying <see cref="System.CommandLine.Builder.CommandLineBuilder"/>
         /// </summary>
         /// <remarks>
         /// It is uncommon to have to interact with this class directly
         /// </remarks>
-        public CommandLineBuilder Builder => _builder;
+        public CommandLineBuilder CommandLineBuilder => _builder.CommandLineBuilder;
 
         /// <summary>
         /// Configure additional services to be used at runtime via the <see cref="IServiceProvider"/>
@@ -63,7 +69,8 @@ namespace Upstream.CommandLine
         /// <remarks>
         /// This is the same mechanism used by <see cref="UseExceptionHandler"/>
         /// </remarks>
-        public CommandLineApplication AddMiddleware(InvocationMiddleware middleware, MiddlewareOrder order = MiddlewareOrder.Default)
+        public CommandLineApplication AddMiddleware(InvocationMiddleware middleware,
+            MiddlewareOrder order = MiddlewareOrder.Default)
         {
             _builder.AddMiddleware(middleware, order);
 
@@ -98,17 +105,13 @@ namespace Upstream.CommandLine
         }
 
         /// <summary>
-        /// Used by <see cref="InvokeAsync"/> to build the <see cref="ServiceProvider"/>
-        /// and application <see cref="Parser"/>.
+        /// Used by <see cref="InvokeAsync"/> to build the underlying <see cref="CommandBuilder"/>
         /// </summary>
         /// <remarks>
         /// Declared as <c>internal</c> for testing purposes
         /// </remarks>
-        [MemberNotNull(nameof(ServiceProvider))]
         internal Parser Build()
         {
-            ServiceProvider = _services.BuildServiceProvider();
-
             return _builder.Build();
         }
 
@@ -122,136 +125,77 @@ namespace Upstream.CommandLine
             return Build().InvokeAsync(args);
         }
 
+        /// <summary>
+        /// Adds a top-level command to the application
+        /// </summary>
+        /// <typeparam name="THandler">Handler that implements <see cref="ICommandHandler{TCommand}"/></typeparam>
+        /// <typeparam name="TCommand">Class representation of command arguments and options</typeparam>
+        /// <returns>Root <see cref="CommandLineApplication"/></returns>
+        /// <remarks>
+        /// Requires that <typeparamref name="TCommand"/> is decorated with
+        /// a <see cref="CommandAttribute"/> to infer the name and description
+        /// </remarks>
         public CommandLineApplication AddCommand<THandler, TCommand>()
             where THandler : class, ICommandHandler<TCommand>
             where TCommand : class
         {
-            return AddCommand<THandler, TCommand>(null);
+            _ = _builder.AddCommand<THandler, TCommand>();
+
+            return this;
         }
         
-        public CommandLineApplication AddCommand<THandler, TCommand>(Action<ICommandBuilder>? builderActions)
+        /// <inheritdoc cref="AddCommand{THandler,TCommand}()" />
+        /// <param name="name">Name of the command</param>
+        /// <param name="description">Description of the command</param>
+        /// <remarks>
+        /// Uses <paramref name="name"/> and <paramref name="description"/>
+        /// to define the command's name and description
+        /// </remarks>
+        public CommandLineApplication AddCommand<THandler, TCommand>(string name, string? description = null)
             where THandler : class, ICommandHandler<TCommand>
             where TCommand : class
         {
-            var type = typeof(TCommand);
-
-            var (name, description) = AttributeDeconstructor.GetCommandInfo(type);
-
-            return AddCommand<THandler, TCommand>(type, name, description, builderActions);
-        }
-
-        public CommandLineApplication AddCommand<THandler, TCommand>(string name, string? description = null,
-            Action<ICommandBuilder>? builderActions = null)
-            where THandler : class, ICommandHandler<TCommand>
-            where TCommand : class
-        {
-            return AddCommand<THandler, TCommand>(typeof(TCommand), name, description, builderActions);
-        }
-
-        public CommandLineApplication AddCommand<THandler, TCommand>(Type type, string name, string? description = null,
-            Action<ICommandBuilder>? builderActions = null)
-            where THandler : class, ICommandHandler<TCommand>
-            where TCommand : class
-        {
-            _services.AddSingleton<THandler>();
-
-            CurrentCommand = CreateCommand<THandler, TCommand>(
-                type,
-                name,
-                description);
-
-            _builder.Command.AddCommand(CurrentCommand);
-
-            builderActions?.Invoke(this);
+            _ = _builder.AddCommand<THandler, TCommand>(name, description);
 
             return this;
         }
 
+        /// <summary>
+        /// Directly adds a <see cref="Command"/> that must be initialized manually
+        /// </summary>
+        /// <param name="command"><c>System.CommandLine</c> Command</param>
+        /// <returns>Root <see cref="CommandLineApplication"/></returns>
+        /// <remarks>
+        /// Can be useful if the <see cref="CommandLineApplication"/> does not expose
+        /// a feature of the underlying <c>System.CommandLine</c> API
+        /// </remarks>
         public CommandLineApplication AddCommand(Command command)
         {
-            _builder.Command.AddCommand(command);
+            _ = _builder.AddCommand(command);
 
             return this;
         }
-        
-        public ICommandBuilder AddSubCommand<THandler, TCommand>()
-            where THandler : class, ICommandHandler<TCommand>
-            where TCommand : class
+
+        /// <summary>
+        /// Adds a command group that can be used to organize commands
+        /// under a common namespace
+        /// </summary>
+        /// <param name="name">Name of the group</param>
+        /// <param name="builderAction">Action to configure subcommands and subgroups</param>
+        /// <returns>Root <see cref="CommandLineApplication"/></returns>
+        public CommandLineApplication AddCommandGroup(string name, Action<ICommandBuilder> builderAction)
         {
-            return AddSubCommand<THandler, TCommand>(null);
+            return AddCommandGroup(name, null, builderAction);
         }
-        
-        public ICommandBuilder AddSubCommand<THandler, TCommand>(Action<ICommandBuilder>? builderAction)
-            where THandler : class, ICommandHandler<TCommand>
-            where TCommand : class
+
+        /// <inheritdoc cref="AddCommandGroup(string,System.Action{Upstream.CommandLine.ICommandBuilder})"/>
+        /// <param name="description">Description of the group</param>
+        public CommandLineApplication AddCommandGroup(string name, string? description,
+            Action<ICommandBuilder> builderAction)
         {
-            var type = typeof(TCommand);
-
-            var (name, description) = AttributeDeconstructor.GetCommandInfo(type);
-            
-            return AddSubCommand<THandler, TCommand>(type, name, description, builderAction);
-        }
-        
-        public ICommandBuilder AddSubCommand<THandler, TCommand>(string name, string? description = null)
-            where THandler : class, ICommandHandler<TCommand>
-            where TCommand : class
-        {
-            return AddSubCommand<THandler, TCommand>(typeof(TCommand), name, description);
-        }
-        
-        public ICommandBuilder AddSubCommand<THandler, TCommand>(Type type, string name, string? description = null, Action<ICommandBuilder>? builderAction = null)
-            where THandler : class, ICommandHandler<TCommand>
-            where TCommand : class
-        {
-            _services.AddSingleton<THandler>();
-
-            var subCommand = CreateCommand<THandler, TCommand>(type, name, description);
-
-            CurrentCommand?.AddCommand(subCommand);
-
-            if (builderAction != null)
-            {
-                var tempCurrentCommand = CurrentCommand; // must be set back to original current command
-                CurrentCommand = subCommand;
-                
-                builderAction.Invoke(this);
-
-                CurrentCommand = tempCurrentCommand;
-            }
+            _ = _builder.AddCommandGroup(name, description, builderAction);
 
             return this;
-        }
-        
-        internal Command CreateCommand<THandler, TCommand>(Type type, string name, string? description = null)
-            where THandler : class, ICommandHandler<TCommand>
-            where TCommand : class
-        {
-            var command = new Command(name, description)
-            {
-                Handler = CommandHandler.Create<TCommand, CancellationToken>((command, cancellationToken) =>
-                {
-                    var internalHandler = ServiceProvider?.GetRequiredService<THandler>()
-                                          ?? throw new InvalidOperationException(
-                                              "Command was invoked without building ServiceProvider");
-
-                    return internalHandler.ExecuteAsync(command, cancellationToken);
-                })
-            };
-
-            foreach (var symbol in AttributeDeconstructor.GetSymbols(type))
-            {
-                switch (symbol)
-                {
-                    case Argument argument:
-                        command.Add(argument);
-                        break;
-                    case Option option:
-                        command.Add(option);
-                        break;
-                }
-            }
-
-            return command;
         }
     }
 }

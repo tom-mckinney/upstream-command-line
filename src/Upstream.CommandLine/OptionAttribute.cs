@@ -17,8 +17,6 @@ namespace Upstream.CommandLine
 
         public string[]? Aliases { get; set; }
 
-        public SymbolType? Type { get; set; }
-
         public bool IsRequired { get; set; } = false;
 
         public object DefaultValue
@@ -37,10 +35,8 @@ namespace Upstream.CommandLine
 
         public override Symbol GetSymbol(PropertyInfo property)
         {
-            var aliases = Aliases?.Length > 0 ? Aliases : new[] { property.Name.ToKebabCase() };
-
             var option = new Option(
-                aliases,
+                this.GetValidatedAliases(property.Name),
                 description: Description,
                 getDefaultValue: SetDefaultValue,
                 argumentType: property.PropertyType);
