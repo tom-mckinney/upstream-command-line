@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using NuGet.Frameworks;
 using Upstream.Testing;
 using Xunit;
 
@@ -16,9 +17,9 @@ public class CommandLineApplicationTests : TestBase<CommandLineApplication>
     }
 
     [Fact]
-    public void ServiceProvider_null_by_default()
+    public void ServiceProvider_throws_if_not_initialized()
     {
-        Assert.Null(TestClass.ServiceProvider);
+        Assert.Throws<InvalidOperationException>(() => TestClass.ServiceProvider);
     }
 
     [Fact]
