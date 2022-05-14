@@ -29,7 +29,8 @@ dotnet add package Upstream.CommandLine
 Refer to
 the [Sample project](https://github.com/tom-mckinney/upstream-command-line/tree/main/src/Samples/SampleConsoleApp) for a
 working example of this package. The following is a simple (non-functional) example of how to configure an
-Upstream.CommandLine console application that uses dependency injected services, command groups, middleware, and exception handling:
+Upstream.CommandLine console application that uses dependency injected services, command groups, middleware, and
+exception handling:
 
 ```csharp
 public static class Program
@@ -58,7 +59,9 @@ public static class Program
 
 ## Commands
 
-A command is a class-based representation of the arguments, options, and other tokens that make up a set of command line instructions. Commands are defined by properties decorated with the `[Command]`, `[Argument]`, and/or `[Options]` attributes.
+A command is a class-based representation of the arguments, options, and other tokens that make up a set of command line
+instructions. Commands are defined by properties decorated with the `[Command]`, `[Argument]`, and/or `[Options]`
+attributes.
 
 Example:
 
@@ -99,13 +102,37 @@ new FooCommand
 }
 ```
 
+## Command Groups
+
+Command groups are a feature that allows nested subcommands. The following configuration would enable the subsequent
+command:
+
+```csharp
+new CommandLineApplication()
+    .AddCommandGroup("foo", builder =>
+    {
+        builder.AddCommandGroup("bar", builder =>
+        {
+            builder.AddCommandGroup<BazCommandHandler, BazCommand>();
+        });
+    });
+```
+
+```bash
+> foo bar baz
+```
+
 ## Command Handlers
 
-A command handler is a class that implements `ICommandHandler` and defines the execution of a [command](#commands). Command handlers are instantiated via dependency injection to enable IoC patterns while developing your command line application.
+A command handler is a class that implements `ICommandHandler` and defines the execution of a [command](#commands).
+Command handlers are instantiated via dependency injection to enable IoC patterns while developing your command line
+application.
 
-An `ICommandHandler` must return an integer representing the exit code of the command. A `0` typically indicates a successful execution, while any other integer indicates an unsuccessful execution.
+An `ICommandHandler` must return an integer representing the exit code of the command. A `0` typically indicates a
+successful execution, while any other integer indicates an unsuccessful execution.
 
 Example:
+
 ```csharp
 public class FooCommandHandler : CommandHandler<FooCommand>
 {
@@ -132,7 +159,10 @@ public class FooCommandHandler : CommandHandler<FooCommand>
 
 ## Middleware
 
-Middleware can be added to the application pipeline to validate or alter a command. For more information, please refer to the [System.CommandLine Middleware Documentation](https://docs.microsoft.com/en-us/dotnet/standard/commandline/use-middleware). 
+Middleware can be added to the application pipeline to validate or alter a command. For more information, please refer
+to
+the [System.CommandLine Middleware Documentation](https://docs.microsoft.com/en-us/dotnet/standard/commandline/use-middleware)
+.
 
 Example:
 
