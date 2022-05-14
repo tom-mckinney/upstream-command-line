@@ -2,8 +2,10 @@
 using SampleConsoleApp.Commands;
 using SampleConsoleApp.Services;
 using System;
+using System.CommandLine.Invocation;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using SampleConsoleApp.Middleware;
 using Upstream.CommandLine;
 
 namespace SampleConsoleApp
@@ -46,6 +48,8 @@ namespace SampleConsoleApp
                     });
                     builder.AddCommand<NestedCommandHandler, NestedCommandHandler.WumboCommand>();
                 })
+                .AddMiddleware<BlueMiddleware>(MiddlewareOrder.Configuration)
+                .AddMiddleware<RedMiddleware>(MiddlewareOrder.ErrorReporting)
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton<IRandomService, RandomService>();
@@ -61,8 +65,6 @@ namespace SampleConsoleApp
                     {
                         Console.WriteLine($"HELLO?: {e.Message} {e.GetType().Name} {e.InnerException?.Message}");
                     }
-
-                    return 1;
                 });
         }
     }

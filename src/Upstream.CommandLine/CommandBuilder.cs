@@ -8,6 +8,7 @@ using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Upstream.CommandLine.Utilities;
 
 namespace Upstream.CommandLine
@@ -16,6 +17,7 @@ namespace Upstream.CommandLine
     {
         private readonly Stack<Command> _commandStack = new();
         private readonly IServiceCollection _services;
+        private IServiceProvider? _serviceProvider;
 
         public CommandBuilder(IServiceCollection services, string? applicationName = null)
         {
@@ -35,18 +37,19 @@ namespace Upstream.CommandLine
             {
                 CommandLineBuilder.Command.Name = applicationName;
             }
-            
+
             _commandStack.Push(CommandLineBuilder.Command);
         }
 
         public CommandLineBuilder CommandLineBuilder { get; }
 
-        public IServiceProvider? ServiceProvider { get; set; }
-        
-        [MemberNotNull(nameof(ServiceProvider))]
+        public IServiceProvider ServiceProvider => _serviceProvider ?? throw new InvalidOperationException(
+            "Command was invoked without building ServiceProvider");
+
+        [MemberNotNull(nameof(_serviceProvider))]
         internal Parser Build()
         {
-            ServiceProvider = _services.BuildServiceProvider();
+            _serviceProvider = _services.BuildServiceProvider();
 
             return CommandLineBuilder.Build();
         }
@@ -54,6 +57,25 @@ namespace Upstream.CommandLine
         public void AddMiddleware(InvocationMiddleware middleware, MiddlewareOrder order = MiddlewareOrder.Default)
         {
             CommandLineBuilder.AddMiddleware(middleware, order);
+        }
+
+        public void AddMiddleware<TMiddleware>(MiddlewareOrder order = MiddlewareOrder.Default)
+            where TMiddleware : class, ICommandMiddleware
+        {
+            _services.TryAddSingleton<TMiddleware>();
+
+            CommandLineBuilder.AddMiddleware(
+                (context, next) => ServiceProvider.GetRequiredService<TMiddleware>().InvokeAsync(context, next), order);
+        }
+
+        public void AddMiddleware<TMiddleware, TImplementation>(MiddlewareOrder order = MiddlewareOrder.Default)
+            where TMiddleware : class, ICommandMiddleware
+            where TImplementation : class, TMiddleware
+        {
+            _services.TryAddSingleton<TMiddleware, TImplementation>();
+
+            CommandLineBuilder.AddMiddleware(
+                (context, next) => ServiceProvider.GetRequiredService<TMiddleware>().InvokeAsync(context, next), order);
         }
 
         public ICommandBuilder AddCommandGroup(string name, Action<ICommandBuilder> builderAction)
@@ -68,7 +90,7 @@ namespace Upstream.CommandLine
             {
                 Handler = null, // Command groups should only provide help and documentation on subcommands
             };
-            
+
             AddScopedCommand(commandGroup, () => builderAction(this));
 
             return this;
@@ -89,7 +111,7 @@ namespace Upstream.CommandLine
         {
             return AddCommand<THandler, TCommand>(typeof(TCommand), name, description);
         }
-        
+
         private ICommandBuilder AddCommand<THandler, TCommand>(Type type, string name, string? description = null)
             where THandler : class, ICommandHandler<TCommand> where TCommand : class
         {
@@ -104,7 +126,7 @@ namespace Upstream.CommandLine
 
             return this;
         }
-        
+
         public ICommandBuilder AddCommand(Command command)
         {
             AddScopedCommand(command, null);
@@ -118,7 +140,7 @@ namespace Upstream.CommandLine
             _commandStack.Push(command);
 
             builderAction?.Invoke();
-            
+
             _ = _commandStack.Pop();
         }
 
@@ -130,9 +152,7 @@ namespace Upstream.CommandLine
             {
                 Handler = CommandHandler.Create<TCommand, CancellationToken>((command, cancellationToken) =>
                 {
-                    var internalHandler = ServiceProvider?.GetRequiredService<THandler>()
-                                          ?? throw new InvalidOperationException(
-                                              "Command was invoked without building ServiceProvider");
+                    var internalHandler = ServiceProvider.GetRequiredService<THandler>();
 
                     return internalHandler.ExecuteAsync(command, cancellationToken);
                 })

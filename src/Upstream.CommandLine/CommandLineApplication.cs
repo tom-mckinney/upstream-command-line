@@ -24,7 +24,7 @@ namespace Upstream.CommandLine
     {
         private readonly IServiceCollection _services = new ServiceCollection();
         private readonly CommandBuilder _builder;
-        
+
         /// <summary>
         /// Initializes an instance of <see cref="CommandLineApplication"/>
         /// </summary>
@@ -40,7 +40,8 @@ namespace Upstream.CommandLine
         /// <remarks>
         /// Declared as <c>internal</c> for testing purposes
         /// </remarks>
-        internal IServiceProvider? ServiceProvider => _builder.ServiceProvider;
+        /// <exception cref="InvalidOperationException">Throws if accessed before building the application</exception>
+        internal IServiceProvider ServiceProvider => _builder.ServiceProvider;
 
         /// <summary>
         /// Allows direct configuration of the underlying <see cref="System.CommandLine.Builder.CommandLineBuilder"/>
@@ -67,7 +68,7 @@ namespace Upstream.CommandLine
         /// Adds middleware to the application. Can be used to short-circuit a command or alter the <see cref="ParseResult"/>.
         /// </summary>
         /// <remarks>
-        /// This is the same mechanism used by <see cref="UseExceptionHandler"/>
+        /// This is the same mechanism used by <see cref="UseExceptionHandler(System.Action{System.Exception})"/>
         /// </remarks>
         public CommandLineApplication AddMiddleware(InvocationMiddleware middleware,
             MiddlewareOrder order = MiddlewareOrder.Default)
@@ -78,12 +79,53 @@ namespace Upstream.CommandLine
         }
 
         /// <summary>
+        /// Adds an implementation of <see cref="ICommandMiddleware"/> to the application that is
+        /// invoked via dependency injection.
+        /// </summary>
+        /// <param name="order">Default position in the middleware pipeline</param>
+        /// <typeparam name="TMiddleware">Middleware</typeparam>
+        public CommandLineApplication AddMiddleware<TMiddleware>(MiddlewareOrder order = MiddlewareOrder.Default)
+            where TMiddleware : class, ICommandMiddleware
+        {
+            _builder.AddMiddleware<TMiddleware>();
+
+            return this;
+        }
+
+        /// <inheritdoc cref="AddMiddleware{TMiddleware}"/>
+        /// <typeparam name="TMiddleware">Middleware</typeparam>
+        /// <typeparam name="TImplementation">Class implementing <c>TMiddleware</c></typeparam>
+        public CommandLineApplication AddMiddleware<TMiddleware, TImplementation>(
+            MiddlewareOrder order = MiddlewareOrder.Default)
+            where TMiddleware : class, ICommandMiddleware
+            where TImplementation : class, TMiddleware
+        {
+            _builder.AddMiddleware<TMiddleware, TImplementation>();
+
+            return this;
+        }
+
+        /// <summary>
         /// Adds <paramref name="exceptionHandler"/> as middleware. If a <see cref="TargetInvocationException"/>
         /// is thrown (default <c>System.CommandLine</c> exception), it will be invoked with the inner exception.
         /// </summary>
         /// <param name="exceptionHandler">Exception Handler</param>
-        /// <returns>Exit Code</returns>
-        public CommandLineApplication UseExceptionHandler(Func<Exception, int> exceptionHandler)
+        public CommandLineApplication UseExceptionHandler(Action<Exception> exceptionHandler)
+        {
+            return UseExceptionHandler(exception =>
+            {
+                exceptionHandler(exception);
+
+                return Task.CompletedTask;
+            });
+        }
+
+        /// <summary>
+        /// Adds <paramref name="exceptionHandler"/> as middleware. If a <see cref="TargetInvocationException"/>
+        /// is thrown (default <c>System.CommandLine</c> exception), it will be invoked with the inner exception.
+        /// </summary>
+        /// <param name="exceptionHandler">Exception Handler</param>
+        public CommandLineApplication UseExceptionHandler(Func<Exception, Task> exceptionHandler)
         {
             _builder.AddMiddleware(async (context, next) =>
             {
@@ -93,11 +135,15 @@ namespace Upstream.CommandLine
                 }
                 catch (TargetInvocationException invocationException)
                 {
-                    context.ExitCode = exceptionHandler(invocationException.InnerException ?? invocationException);
+                    await exceptionHandler(invocationException.InnerException ?? invocationException);
+
+                    context.ExitCode = 1;
                 }
                 catch (Exception e)
                 {
-                    context.ExitCode = exceptionHandler(e);
+                    await exceptionHandler(e);
+
+                    context.ExitCode = 1;
                 }
             }, MiddlewareOrder.ExceptionHandler);
 
@@ -143,7 +189,7 @@ namespace Upstream.CommandLine
 
             return this;
         }
-        
+
         /// <inheritdoc cref="AddCommand{THandler,TCommand}()" />
         /// <param name="name">Name of the command</param>
         /// <param name="description">Description of the command</param>
@@ -189,7 +235,9 @@ namespace Upstream.CommandLine
         }
 
         /// <inheritdoc cref="AddCommandGroup(string,System.Action{Upstream.CommandLine.ICommandBuilder})"/>
+        /// <param name="name">Name of the group</param>
         /// <param name="description">Description of the group</param>
+        /// <param name="builderAction">Action to configure subcommands and subgroups</param>
         public CommandLineApplication AddCommandGroup(string name, string? description,
             Action<ICommandBuilder> builderAction)
         {
