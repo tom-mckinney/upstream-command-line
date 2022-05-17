@@ -137,9 +137,15 @@ namespace Upstream.CommandLine
         private void AddScopedCommand(Command command, Action? builderAction)
         {
             _commandStack.Peek().AddCommand(command);
+
+            if (builderAction is null)
+            {
+                return; // no need to add to command stack
+            }
+            
             _commandStack.Push(command);
 
-            builderAction?.Invoke();
+            builderAction.Invoke();
 
             _ = _commandStack.Pop();
         }

@@ -112,20 +112,28 @@ namespace Upstream.CommandLine
         /// <param name="exceptionHandler">Exception Handler</param>
         public CommandLineApplication UseExceptionHandler(Action<Exception> exceptionHandler)
         {
-            return UseExceptionHandler(exception =>
+            return UseExceptionHandler((e, _) => exceptionHandler(e));
+        }
+        
+        /// <inheritdoc cref="UseExceptionHandler(System.Action{System.Exception})"/>
+        public CommandLineApplication UseExceptionHandler(Action<Exception, InvocationContext> exceptionHandler)
+        {
+            return UseExceptionHandler((exception, context) =>
             {
-                exceptionHandler(exception);
+                exceptionHandler(exception, context);
 
                 return Task.CompletedTask;
             });
         }
 
-        /// <summary>
-        /// Adds <paramref name="exceptionHandler"/> as middleware. If a <see cref="TargetInvocationException"/>
-        /// is thrown (default <c>System.CommandLine</c> exception), it will be invoked with the inner exception.
-        /// </summary>
-        /// <param name="exceptionHandler">Exception Handler</param>
+        /// <inheritdoc cref="UseExceptionHandler(System.Action{System.Exception})"/>
         public CommandLineApplication UseExceptionHandler(Func<Exception, Task> exceptionHandler)
+        {
+            return UseExceptionHandler((e, _) => exceptionHandler(e));
+        }
+        
+        /// <inheritdoc cref="UseExceptionHandler(System.Action{System.Exception})"/>
+        public CommandLineApplication UseExceptionHandler(Func<Exception, InvocationContext, Task> exceptionHandler)
         {
             _builder.AddMiddleware(async (context, next) =>
             {
@@ -135,13 +143,13 @@ namespace Upstream.CommandLine
                 }
                 catch (TargetInvocationException invocationException)
                 {
-                    await exceptionHandler(invocationException.InnerException ?? invocationException);
+                    await exceptionHandler(invocationException.InnerException ?? invocationException, context);
 
                     context.ExitCode = 1;
                 }
                 catch (Exception e)
                 {
-                    await exceptionHandler(e);
+                    await exceptionHandler(e, context);
 
                     context.ExitCode = 1;
                 }
