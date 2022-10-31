@@ -1,4 +1,5 @@
-﻿using System.CommandLine;
+using System.Collections.Generic;
+using System.CommandLine;
 using Upstream.CommandLine.Utilities;
 using Xunit;
 
@@ -22,6 +23,9 @@ namespace Upstream.CommandLine.Test.Utilities
 
             [Option("-r", "--reason", Description = "Reason for doing the thing")]
             public string Reason { get; set; }
+
+            [Option(AllowMultipleArgumentsPerToken = true)]
+            public IEnumerable<string> ListItems { get; set; }
         }
 
         [Fact]
@@ -68,6 +72,12 @@ namespace Upstream.CommandLine.Test.Utilities
             Assert.Contains("--reason", reasonOption.Aliases);
             Assert.Equal("Reason for doing the thing", reasonOption.Description);
             Assert.Equal(reasonProperty.PropertyType, reasonOption.ValueType);
+            Assert.Equal(ArgumentArity.ExactlyOne, reasonOption.Arity);
+
+            var listItemProperty = type.GetProperty(nameof(GoodOptions.ListItems));
+            var listItemOption = (Option)AttributeDeconstructor.GetSymbol(listItemProperty);
+            Assert.True(listItemOption.AllowMultipleArgumentsPerToken);
+            Assert.Equal(ArgumentArity.OneOrMore, listItemOption.Arity);
         }
     }
 }

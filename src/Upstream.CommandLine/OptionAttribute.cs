@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.CommandLine;
 using System.Reflection;
 using Upstream.CommandLine.Extensions;
@@ -18,6 +18,8 @@ namespace Upstream.CommandLine
         public string[]? Aliases { get; set; }
 
         public bool IsRequired { get; set; } = false;
+
+        public bool AllowMultipleArgumentsPerToken { get; set; } = false;
 
         public object DefaultValue
         {
@@ -44,6 +46,11 @@ namespace Upstream.CommandLine
             if (IsRequired)
             {
                 option.IsRequired = true;
+            }
+
+            if (AllowMultipleArgumentsPerToken)
+            {
+                option.AllowMultipleArgumentsPerToken = true;
             }
 
             return option;
