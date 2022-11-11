@@ -47,10 +47,9 @@ namespace Upstream.CommandLine
             "Command was invoked without building ServiceProvider");
 
         [MemberNotNull(nameof(_serviceProvider))]
-        internal Parser Build()
+        internal Parser Build(IServiceProvider provider)
         {
-            _serviceProvider = _services.BuildServiceProvider();
-
+            _serviceProvider = provider;
             return CommandLineBuilder.Build();
         }
 
@@ -142,7 +141,7 @@ namespace Upstream.CommandLine
             {
                 return; // no need to add to command stack
             }
-            
+
             _commandStack.Push(command);
 
             builderAction.Invoke();

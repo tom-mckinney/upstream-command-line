@@ -6,6 +6,8 @@ using System.CommandLine.Parsing;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace Upstream.CommandLine
 {
@@ -22,16 +24,30 @@ namespace Upstream.CommandLine
     /// </example>
     public class CommandLineApplication
     {
-        private readonly IServiceCollection _services = new ServiceCollection();
+        private readonly IHostBuilder _hostBuilder;
         private readonly CommandBuilder _builder;
 
         /// <summary>
-        /// Initializes an instance of <see cref="CommandLineApplication"/>
+        /// Initializes an instance using the default host builder (`Host.CreateDefaultBuilder()`)
         /// </summary>
         /// <param name="applicationName">Name of application root command</param>
         public CommandLineApplication(string? applicationName = null)
+            : this(Host.CreateDefaultBuilder(), applicationName)
         {
-            _builder = new CommandBuilder(_services, applicationName);
+        }
+
+        /// <summary>
+        /// Initialize an instance with a custom IHostBuilder
+        /// </summary>
+        /// <param name="hostBuilder">A custom IHostBuilder of your choosing</param>
+        /// <param name="applicationName">Name of application root command</param>
+        public CommandLineApplication(IHostBuilder hostBuilder, string? applicationName = null)
+        {
+            var cliServices = new ServiceCollection();
+            _builder = new CommandBuilder(cliServices, applicationName);
+
+            _hostBuilder = hostBuilder;
+            _hostBuilder.ConfigureServices(services => services.Add(cliServices));
         }
 
         /// <summary>
@@ -59,7 +75,7 @@ namespace Upstream.CommandLine
         /// </remarks>
         public CommandLineApplication ConfigureServices(Action<IServiceCollection> configureServices)
         {
-            configureServices(_services);
+            _hostBuilder.ConfigureServices(configureServices);
 
             return this;
         }
@@ -114,7 +130,7 @@ namespace Upstream.CommandLine
         {
             return UseExceptionHandler((e, _) => exceptionHandler(e));
         }
-        
+
         /// <inheritdoc cref="UseExceptionHandler(System.Action{System.Exception})"/>
         public CommandLineApplication UseExceptionHandler(Action<Exception, InvocationContext> exceptionHandler)
         {
@@ -131,7 +147,7 @@ namespace Upstream.CommandLine
         {
             return UseExceptionHandler((e, _) => exceptionHandler(e));
         }
-        
+
         /// <inheritdoc cref="UseExceptionHandler(System.Action{System.Exception})"/>
         public CommandLineApplication UseExceptionHandler(Func<Exception, InvocationContext, Task> exceptionHandler)
         {
@@ -166,7 +182,8 @@ namespace Upstream.CommandLine
         /// </remarks>
         internal Parser Build()
         {
-            return _builder.Build();
+            var host = _hostBuilder.Build();
+            return _builder.Build(host.Services);
         }
 
         /// <summary>

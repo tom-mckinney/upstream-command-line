@@ -5,6 +5,7 @@ using System;
 using System.CommandLine.Invocation;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
 using SampleConsoleApp.Middleware;
 using Upstream.CommandLine;
 
@@ -37,7 +38,11 @@ namespace SampleConsoleApp
 
         public static CommandLineApplication BuildCommandLineApplication()
         {
-            return new CommandLineApplication()
+            var hostBuilder = Host.CreateDefaultBuilder()
+                // Use a custom factory here to integrate other DI libraries like Autofac
+                .UseServiceProviderFactory(new DefaultServiceProviderFactory());
+
+            return new CommandLineApplication(hostBuilder)
                 .AddCommand<FooCommandHandler, FooCommand>()
                 .AddCommand<BarCommandHandler, BarCommand>("bar")
                 .AddCommandGroup("gizmo", builder =>
