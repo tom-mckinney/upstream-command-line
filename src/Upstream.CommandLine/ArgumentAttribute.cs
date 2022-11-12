@@ -1,12 +1,14 @@
-﻿using System.CommandLine;
+﻿using System;
+using System.CommandLine;
 using System.Reflection;
+using Upstream.CommandLine.Exceptions;
 using Upstream.CommandLine.Extensions;
 
 namespace Upstream.CommandLine
 {
     public class ArgumentAttribute : DirectiveSymbolAttribute
     {
-        private static readonly object _uninitializedDefaultValue = new();
+        private object? _defaultValue;
 
         public ArgumentAttribute()
         {
@@ -23,16 +25,28 @@ namespace Upstream.CommandLine
             DefaultValue = defaultValue;
         }
 
-        public object DefaultValue { get; set; } = _uninitializedDefaultValue;
+        public object? DefaultValue
+        {
+            get => _defaultValue;
+            set
+            {
+                _defaultValue = value;
+                HasDefaultValue = true;
+            }
+        }
 
-        public bool HasDefaultValue => DefaultValue != _uninitializedDefaultValue;
+        public bool HasDefaultValue { get; private set; }
 
         public override Symbol GetSymbol(PropertyInfo property)
         {
-            var argument = new Argument(Name ?? property.Name.ToKebabCase())
+            var argumentType = typeof(Argument<>).MakeGenericType(property.PropertyType);
+            var argumentObject =
+                Activator.CreateInstance(argumentType, Name ?? property.Name.ToKebabCase(), Description);
+
+            if (argumentObject is not Argument argument)
             {
-                ValueType = property.PropertyType
-            };
+                throw new CommandLineException($"Unable to instantiate argument of type {argumentType}");
+            }
 
             if (!string.IsNullOrEmpty(Description))
             {
