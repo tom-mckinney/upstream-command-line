@@ -1,6 +1,7 @@
 using System;
 using System.CommandLine;
 using System.Reflection;
+using Upstream.CommandLine.Exceptions;
 using Upstream.CommandLine.Extensions;
 
 namespace Upstream.CommandLine
@@ -37,11 +38,13 @@ namespace Upstream.CommandLine
 
         public override Symbol GetSymbol(PropertyInfo property)
         {
-            var option = new Option(
-                this.GetValidatedAliases(property.Name),
-                description: Description,
-                getDefaultValue: SetDefaultValue,
-                argumentType: property.PropertyType);
+            var optionType = typeof(Option<>).MakeGenericType(property.PropertyType);
+            var optionObject = Activator.CreateInstance(optionType, this.GetValidatedAliases(property.Name), Description);
+
+            if (optionObject is not Option option)
+            {
+                throw new CommandLineException($"Unable to instantiate option of type {optionType}");
+            }
 
             if (IsRequired)
             {
@@ -51,6 +54,11 @@ namespace Upstream.CommandLine
             if (AllowMultipleArgumentsPerToken)
             {
                 option.AllowMultipleArgumentsPerToken = true;
+            }
+
+            if (SetDefaultValue != null)
+            {
+                option.SetDefaultValueFactory(SetDefaultValue);
             }
 
             return option;
