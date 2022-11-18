@@ -28,10 +28,58 @@ namespace Upstream.CommandLine
         /// <summary>
         /// Initializes an instance of <see cref="CommandLineApplication"/>
         /// </summary>
-        /// <param name="applicationName">Name of application root command</param>
-        public CommandLineApplication(string? applicationName = null)
+        /// <param name="applicationName">Name of the <see cref="RootCommand"/>. Will be displayed in help text.</param>
+        /// <param name="description">Description of the <see cref="RootCommand"/>. Will be displayed in help text.</param>
+        public CommandLineApplication(string? applicationName = null, string? description = null)
+            : this(CreateRootCommand(applicationName, description))
         {
-            _builder = new CommandBuilder(_services, applicationName);
+        }
+        
+        /// <summary>
+        /// Initializes an instance of <see cref="CommandLineApplication"/> with a custom root command handler
+        /// </summary>
+        /// <param name="rootHandler">Root handler action</param>
+        /// <param name="applicationName">Name of the <see cref="RootCommand"/>. Will be displayed in help text.</param>
+        /// <param name="description">Description of the <see cref="RootCommand"/>. Will be displayed in help text.</param>
+        public CommandLineApplication(Action rootHandler, string? applicationName = null, string? description = null)
+            : this((_) => rootHandler(), applicationName, description)
+        {
+        }
+
+        /// <summary>
+        /// Initializes an instance of <see cref="CommandLineApplication"/> with a custom root command handler
+        /// </summary>
+        /// <param name="rootHandler">Root handler action</param>
+        /// <param name="applicationName">Name of the <see cref="RootCommand"/>. Will be displayed in help text.</param>
+        /// <param name="description">Description of the <see cref="RootCommand"/>. Will be displayed in help text.</param>
+        public CommandLineApplication(Action<InvocationContext> rootHandler, string? applicationName = null, string? description = null)
+            : this(CreateRootCommand(applicationName, description, rootHandler))
+        {
+        }
+        
+        private static Command CreateRootCommand(string? name = null, string? description = null,
+            Action<InvocationContext>? handler = null)
+        {
+            var command = name is not null
+                ? new Command(name, description)
+                : new RootCommand(description ?? string.Empty); // will use executable filename by default
+
+
+            if (handler is not null)
+            {
+                command.SetHandler(handler);
+            }
+
+            return command;
+        }
+
+        /// <summary>
+        /// Initializes an instance of <see cref="CommandLineApplication"/>
+        /// </summary>
+        /// <param name="rootCommand"><see cref="Command"/></param>
+        public CommandLineApplication(Command? rootCommand)
+        {
+            _builder = new CommandBuilder(_services, rootCommand);
         }
 
         /// <summary>
@@ -114,7 +162,7 @@ namespace Upstream.CommandLine
         {
             return UseExceptionHandler((e, _) => exceptionHandler(e));
         }
-        
+
         /// <inheritdoc cref="UseExceptionHandler(System.Action{System.Exception})"/>
         public CommandLineApplication UseExceptionHandler(Action<Exception, InvocationContext> exceptionHandler)
         {
@@ -131,7 +179,7 @@ namespace Upstream.CommandLine
         {
             return UseExceptionHandler((e, _) => exceptionHandler(e));
         }
-        
+
         /// <inheritdoc cref="UseExceptionHandler(System.Action{System.Exception})"/>
         public CommandLineApplication UseExceptionHandler(Func<Exception, InvocationContext, Task> exceptionHandler)
         {
@@ -173,10 +221,11 @@ namespace Upstream.CommandLine
         /// Builds the command line application and invokes it with the <paramref name="args"/>
         /// </summary>
         /// <param name="args">Command line arguments</param>
+        /// <param name="console"><see cref="IConsole"/></param>
         /// <returns>Exit Code</returns>
-        public Task<int> InvokeAsync(string[] args)
+        public Task<int> InvokeAsync(string[] args, IConsole? console = null)
         {
-            return Build().InvokeAsync(args);
+            return Build().InvokeAsync(args, console);
         }
 
         /// <summary>
@@ -239,17 +288,58 @@ namespace Upstream.CommandLine
         /// <returns>Root <see cref="CommandLineApplication"/></returns>
         public CommandLineApplication AddCommandGroup(string name, Action<ICommandBuilder> builderAction)
         {
-            return AddCommandGroup(name, null, builderAction);
+            return AddCommandGroup(name, null, builderAction, null);
         }
 
-        /// <inheritdoc cref="AddCommandGroup(string,System.Action{Upstream.CommandLine.ICommandBuilder})"/>
+        /// <inheritdoc cref="AddCommandGroup(string,System.Action{Upstream.CommandLine.ICommandBuilder})" />
         /// <param name="name">Name of the group</param>
         /// <param name="description">Description of the group</param>
         /// <param name="builderAction">Action to configure subcommands and subgroups</param>
         public CommandLineApplication AddCommandGroup(string name, string? description,
             Action<ICommandBuilder> builderAction)
         {
-            _ = _builder.AddCommandGroup(name, description, builderAction);
+            return AddCommandGroup(name, description, builderAction, null);
+        }
+
+        /// <inheritdoc cref="AddCommandGroup(string,System.Action{Upstream.CommandLine.ICommandBuilder})"/>
+        /// <typeparam name="THandler">Handler that implements <see cref="ICommandHandler{TCommand}"/></typeparam>
+        /// <typeparam name="TCommand">Command class</typeparam>
+        /// <returns></returns>
+        public CommandLineApplication AddCommandGroup<THandler, TCommand>(string name,
+            Action<ICommandBuilder> builderAction)
+            where THandler : class, ICommandHandler<TCommand>
+            where TCommand : class
+        {
+            return AddCommandGroup<THandler, TCommand>(name, null, builderAction);
+        }
+
+        /// <inheritdoc cref="AddCommandGroup(string,System.Action{Upstream.CommandLine.ICommandBuilder})"/>
+        /// <param name="description">Description for the command group</param>
+        /// <typeparam name="THandler">Handler that implements <see cref="ICommandHandler{TCommand}"/></typeparam>
+        /// <typeparam name="TCommand">Command class</typeparam>
+        /// <returns></returns>
+        public CommandLineApplication AddCommandGroup<THandler, TCommand>(string name, string? description,
+            Action<ICommandBuilder> builderAction)
+            where THandler : class, ICommandHandler<TCommand>
+            where TCommand : class
+        {
+            _ = _builder.AddCommandGroup<THandler, TCommand>(name, description, builderAction);
+
+            return this;
+        }
+
+        /// <inheritdoc cref="AddCommandGroup(string,System.Action{Upstream.CommandLine.ICommandBuilder})"/>
+        /// <param name="description">Description for the command group</param>
+        /// <param name="commandGroupHandler">Optional handler for the command group</param>
+        /// <returns></returns>
+        public CommandLineApplication AddCommandGroup(
+            string name,
+            string? description,
+            Action<ICommandBuilder> builderAction,
+            ICommandHandler? commandGroupHandler
+        )
+        {
+            _ = _builder.AddCommandGroup(name, description, builderAction, commandGroupHandler);
 
             return this;
         }
