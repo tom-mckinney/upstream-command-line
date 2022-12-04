@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
-using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Upstream.CommandLine.Utilities;
@@ -19,24 +17,20 @@ namespace Upstream.CommandLine
         private readonly IServiceCollection _services;
         private IServiceProvider? _serviceProvider;
 
-        public CommandBuilder(IServiceCollection services, string? applicationName = null)
+        public CommandBuilder(IServiceCollection services, Command? rootCommand = null)
         {
             _services = services;
-            CommandLineBuilder = new CommandLineBuilder() // UseDefaults() except with custom exception handler
-                .UseVersionOption()
-                .UseHelp()
-                .UseEnvironmentVariableDirective()
-                .UseParseDirective()
-                .UseSuggestDirective()
-                .RegisterWithDotnetSuggest()
-                .UseTypoCorrections()
-                .UseParseErrorReporting()
-                .CancelOnProcessTermination();
-
-            if (applicationName is not null && !string.IsNullOrEmpty(applicationName))
-            {
-                CommandLineBuilder.Command.Name = applicationName;
-            }
+            CommandLineBuilder =
+                new CommandLineBuilder(rootCommand) // UseDefaults() except with custom exception handler
+                    .UseVersionOption()
+                    .UseHelp()
+                    .UseEnvironmentVariableDirective()
+                    .UseParseDirective()
+                    .UseSuggestDirective()
+                    .RegisterWithDotnetSuggest()
+                    .UseTypoCorrections()
+                    .UseParseErrorReporting()
+                    .CancelOnProcessTermination();
 
             _commandStack.Push(CommandLineBuilder.Command);
         }
@@ -80,15 +74,35 @@ namespace Upstream.CommandLine
 
         public ICommandBuilder AddCommandGroup(string name, Action<ICommandBuilder> builderAction)
         {
-            return AddCommandGroup(name, null, builderAction);
+            return AddCommandGroup(name, null, builderAction, null);
         }
 
-        public ICommandBuilder AddCommandGroup(string name, string? description,
+        public ICommandBuilder AddCommandGroup(string name, string? description, Action<ICommandBuilder> builderAction)
+        {
+            return AddCommandGroup(name, description, builderAction, null);
+        }
+
+        public ICommandBuilder AddCommandGroup<THandler, TCommand>(string name, string? description,
             Action<ICommandBuilder> builderAction)
+            where THandler : class, ICommandHandler<TCommand>
+            where TCommand : class
+        {
+            _services.AddSingleton<THandler>();
+
+            return AddCommandGroup(name, description, builderAction,
+                ServiceBinderHandler.Create<THandler, TCommand>(() => ServiceProvider));
+        }
+
+        public ICommandBuilder AddCommandGroup(
+            string name,
+            string? description,
+            Action<ICommandBuilder> builderAction,
+            ICommandHandler? commandGroupHandler
+        )
         {
             var commandGroup = new Command(name, description)
             {
-                Handler = null, // Command groups should only provide help and documentation on subcommands
+                Handler = commandGroupHandler
             };
 
             AddScopedCommand(commandGroup, () => builderAction(this));
@@ -142,7 +156,7 @@ namespace Upstream.CommandLine
             {
                 return; // no need to add to command stack
             }
-            
+
             _commandStack.Push(command);
 
             builderAction.Invoke();
@@ -156,12 +170,7 @@ namespace Upstream.CommandLine
         {
             var command = new Command(name, description)
             {
-                Handler = CommandHandler.Create<TCommand, CancellationToken>((command, cancellationToken) =>
-                {
-                    var internalHandler = ServiceProvider.GetRequiredService<THandler>();
-
-                    return internalHandler.ExecuteAsync(command, cancellationToken);
-                })
+                Handler = ServiceBinderHandler.Create<THandler, TCommand>(() => ServiceProvider),
             };
 
             foreach (var symbol in AttributeDeconstructor.GetSymbols(type))

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using SampleConsoleApp.Services;
 using Upstream.CommandLine;
 
-namespace SampleConsoleApp.Commands
+namespace SampleConsoleApp.Handlers
 {
     public enum Color
     {

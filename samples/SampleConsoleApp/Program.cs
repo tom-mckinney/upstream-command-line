@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using SampleConsoleApp.Commands;
 using SampleConsoleApp.Services;
 using System;
 using System.CommandLine.Invocation;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using SampleConsoleApp.Handlers;
 using SampleConsoleApp.Middleware;
 using Upstream.CommandLine;
 
@@ -37,7 +37,7 @@ namespace SampleConsoleApp
 
         public static CommandLineApplication BuildCommandLineApplication()
         {
-            return new CommandLineApplication()
+            return new CommandLineApplication("sample", "This is a sample application")
                 .AddCommand<FooCommandHandler, FooCommand>()
                 .AddCommand<BarCommandHandler, BarCommand>("bar")
                 .AddCommandGroup("gizmo", builder =>

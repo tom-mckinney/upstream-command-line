@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using SampleConsoleApp.Services;
 using Upstream.CommandLine;
 
-namespace SampleConsoleApp.Commands
+namespace SampleConsoleApp.Handlers
 {
     [Command("foo", "Foo is the name of the command")]
     public class FooCommand
