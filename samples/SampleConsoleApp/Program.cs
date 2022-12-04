@@ -40,6 +40,7 @@ namespace SampleConsoleApp
             return new CommandLineApplication("sample", "This is a sample application")
                 .AddCommand<FooCommandHandler, FooCommand>()
                 .AddCommand<BarCommandHandler, BarCommand>("bar")
+                .AddCommand<RecordCommandHandler, RecordCommandHandler.RecordCommand>()
                 .AddCommandGroup("gizmo", builder =>
                 {
                     builder.AddCommandGroup("gadget", builder =>
