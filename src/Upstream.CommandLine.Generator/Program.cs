@@ -8,7 +8,10 @@ partial class Program
         test.UserMethod();
         // Console.WriteLine(Testo.Wumbo());
         HelloFrom("Generated Code");
+
+        var command = new TestCommand();
         
+        command.Run();
     }
 
     static partial void HelloFrom(string name);

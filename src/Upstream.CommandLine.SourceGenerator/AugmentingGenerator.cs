@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -29,9 +30,9 @@ public class AugmentingGenerator : ISourceGenerator
         var source = $$"""
                        public partial class {{userClass.Identifier}}
                        {
-                           public string Test() { return "Foo"; }
+                           public string Test() => "Test?";
                            
-                           public void GeneratedMethod()
+                            public void GeneratedMethod()
                            {
                                // generated code v3
                                Console.WriteLine("Hello?!");
@@ -52,10 +53,22 @@ public class AugmentingGenerator : ISourceGenerator
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
             // Business logic to decide what we're interested in goes here
-            if (syntaxNode is ClassDeclarationSyntax cds &&
-                cds.Identifier.ValueText == "UserClass")
+            // if (syntaxNode is ClassDeclarationSyntax cds &&
+            //     cds.Identifier.ValueText == "UserClass")
+            // {
+            //     ClassToAugment = cds;
+            // }
+
+            if (syntaxNode is ClassDeclarationSyntax cds1)
             {
-                ClassToAugment = cds;
+                var commandAttributes = cds1.AttributeLists.SelectMany(x => x.Attributes)
+                    .Where(a => a.Name.ToString() is "CommandGenerator" or "CommandGeneratorAttribute" )
+                    .ToArray();
+
+                if (commandAttributes.Any())
+                {
+                    ClassToAugment = cds1;
+                }
             }
         }
     }

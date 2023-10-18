@@ -1,15 +1,16 @@
 // namespace ConsoleApp;
 
-// [AttributeUsage(AttributeTargets.Class)]
-// public class CommandGeneratorAttribute : Attribute
-// {
-// }
+[AttributeUsage(AttributeTargets.Class)]
+public class CommandGeneratorAttribute : Attribute
+{
+}
 
-// [CommandGenerator]
+[CommandGenerator]
 public partial class TestCommand
 {
     public void Run()
     {
+        this.GeneratedMethod();
         // BuildCommand();
     }
 }
