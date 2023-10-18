@@ -1,0 +1,2 @@
+# upstream-vanilla
+This is a sample application that **does not** use `Upstream.CommandLine` and instead uses a vanilla implementation of `System.CommandLine`. The purpose of this application is for comparison and benchmarking.

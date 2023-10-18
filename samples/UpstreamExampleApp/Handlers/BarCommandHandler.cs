@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using SampleConsoleApp.Services;
 using Upstream.CommandLine;
+using UpstreamExampleApp.Services;
 
-namespace SampleConsoleApp.Handlers
+namespace UpstreamExampleApp.Handlers
 {
     public enum Color
     {
