@@ -1,18 +1,13 @@
-﻿namespace UpstreamSourceGeneratorApp;
+﻿using Upstream.CommandLine;
+
+namespace UpstreamSourceGeneratorApp;
 
 partial class Program
 {
     static void Main(string[] args)
     {
-        var test = new UserClass();
-        test.UserMethod();
-        // Console.WriteLine(Testo.Wumbo());
-        HelloFrom("Generated Code");
-
-        var command = new TestCommand();
+        var builder = new CommandLineApplication();
         
-        command.Run();
+        builder.AutoWireCommands();
     }
-
-    static partial void HelloFrom(string name);
 }

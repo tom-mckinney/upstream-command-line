@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-[Generator]
+// [Generator]
 public class AugmentingGenerator : ISourceGenerator
 {
     public void Initialize(GeneratorInitializationContext context)

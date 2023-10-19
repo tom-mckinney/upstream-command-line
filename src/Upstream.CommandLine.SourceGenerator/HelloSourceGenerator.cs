@@ -2,7 +2,7 @@ using Microsoft.CodeAnalysis;
 
 namespace Upstream.CommandLine.SourceGenerator
 {
-    [Generator]
+    // [Generator]
     public class HelloSourceGenerator : ISourceGenerator
     {
         public void Execute(GeneratorExecutionContext context)

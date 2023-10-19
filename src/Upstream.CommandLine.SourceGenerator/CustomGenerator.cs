@@ -2,7 +2,7 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-[Generator]
+// [Generator]
 public class CustomGenerator : ISourceGenerator
 {
     public void Initialize(GeneratorInitializationContext context)
