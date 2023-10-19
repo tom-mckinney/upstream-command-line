@@ -3,7 +3,7 @@
   "profiles": {
     "Generators": {
       "commandName": "DebugRoslynComponent",
-      "targetProject": "../Upstream.CommandLine.Generator/Upstream.CommandLine.Generator.csproj"
+      "targetProject": "../../samples/UpstreamSourceGeneratorApp/UpstreamSourceGeneratorApp.csproj"
     }
   }
 }

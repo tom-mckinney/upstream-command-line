@@ -1,5 +1,3 @@
-// namespace ConsoleApp;
-
 [AttributeUsage(AttributeTargets.Class)]
 public class CommandGeneratorAttribute : Attribute
 {

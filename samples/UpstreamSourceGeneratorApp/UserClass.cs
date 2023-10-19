@@ -1,3 +1,5 @@
+namespace UpstreamSourceGeneratorApp;
+
 public partial class UserClass
 {
     public void UserMethod()

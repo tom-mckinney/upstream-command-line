@@ -1,4 +1,4 @@
-﻿namespace ConsoleApp;
+﻿namespace UpstreamSourceGeneratorApp;
 
 partial class Program
 {

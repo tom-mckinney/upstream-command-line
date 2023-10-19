@@ -35,9 +35,8 @@ public class AugmentingGenerator : ISourceGenerator
                             public void GeneratedMethod()
                            {
                                // generated code v3
-                               Console.WriteLine("Hello?!");
+                               Console.WriteLine("Does this work?!");
                            }
-                           
                        }
                        """;
 
