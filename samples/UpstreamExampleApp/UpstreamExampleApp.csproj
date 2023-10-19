@@ -5,6 +5,11 @@
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <ToolCommandName>upstream-example</ToolCommandName>
+    <PackAsTool>true</PackAsTool>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\Upstream.CommandLine\Upstream.CommandLine.csproj" />
   </ItemGroup>

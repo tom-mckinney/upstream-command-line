@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SampleConsoleApp;
+namespace UpstreamExampleApp;
 
 public class SampleException : Exception
 {

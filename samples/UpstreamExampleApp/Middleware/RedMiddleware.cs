@@ -3,20 +3,20 @@ using System.CommandLine.Invocation;
 using System.Threading.Tasks;
 using Upstream.CommandLine;
 
-namespace SampleConsoleApp.Middleware;
+namespace UpstreamExampleApp.Middleware;
 
-public class BlueMiddleware : ICommandMiddleware
+public class RedMiddleware : ICommandMiddleware
 {
     public async Task InvokeAsync(InvocationContext context, Func<InvocationContext, Task> next)
     {
-        Console.ForegroundColor = ConsoleColor.Blue;
-        Console.WriteLine("blue");
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine("red");
         Console.ResetColor();
-
+        
         await next(context);
         
-        Console.ForegroundColor = ConsoleColor.Blue;
-        Console.WriteLine("blue");
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine("red");
         Console.ResetColor();
     }
 }

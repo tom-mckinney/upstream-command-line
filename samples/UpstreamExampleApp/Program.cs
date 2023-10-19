@@ -1,14 +1,14 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using SampleConsoleApp.Services;
 using System;
 using System.CommandLine.Invocation;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using SampleConsoleApp.Handlers;
-using SampleConsoleApp.Middleware;
 using Upstream.CommandLine;
+using UpstreamExampleApp.Handlers;
+using UpstreamExampleApp.Middleware;
+using UpstreamExampleApp.Services;
 
-namespace SampleConsoleApp
+namespace UpstreamExampleApp
 {
     public static class Program
     {

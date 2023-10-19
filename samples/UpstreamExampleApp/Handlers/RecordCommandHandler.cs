@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Upstream.CommandLine;
 
-namespace SampleConsoleApp.Handlers;
+namespace UpstreamExampleApp.Handlers;
 
 public class RecordCommandHandler : ICommandHandler<RecordCommandHandler.RecordCommand>
 {
