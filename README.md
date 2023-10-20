@@ -159,15 +159,19 @@ public class FooCommandHandler : CommandHandler<FooCommand>
 
 ## Middleware
 
-Middleware can be added to the application pipeline to validate or alter a command. For more information, please refer
-to
-the [System.CommandLine Middleware Documentation](https://docs.microsoft.com/en-us/dotnet/standard/commandline/use-middleware)
-.
+There are two types of middleware that are supported by this library.
+
+#### System.CommandLine Middleware
+
+Classes that implement `ICommandInvocationMiddleware` can be added to the application pipeline to validate or alter a
+command. For more information, please refer to
+the [System.CommandLine Middleware Documentation](https://docs.microsoft.com/en-us/dotnet/standard/commandline/use-middleware). These classes are invoked during parsing and model binding. Therefore,
+you cannot access the Command class that is available in command handlers.
 
 Example:
 
 ```csharp
-public class GreetMiddleware : ICommandMiddleware
+public class GreetMiddleware : ICommandInvocationMiddleware
 {
     public async Task InvokeAsync(InvocationContext context
         Func<InvocationContext, Task> next)
@@ -177,6 +181,32 @@ public class GreetMiddleware : ICommandMiddleware
         await next(context);
         
         Console.WriteLine("Goodbye!");
+    }
+}
+```
+
+#### Upstream.CommandLine Middleware
+
+Classes that implement `ICommandHandlerMiddleware` can be registered with the service provider to alter or supplement command handling. These classes are invoked after model binding but before the matching `ICommandHandler<TCommand>` is executed.
+
+Example:
+
+```csharp
+public class CommandTypeMiddleware : ICommandHandlerMiddleware
+{
+    public async Task InvokeAsync<TCommand>(TCommand command, Func<TCommand, Task> next, CancellationToken cancellationToken)
+        where TCommand : class
+    {
+        Console.WriteLine($"Before executing command: {command.GetType().Name}");
+        
+        if (command is TestCommand testCommand)
+        {
+            Console.WriteLine($"Looks like this is a test!: {testCommand.Reason}");
+        }
+
+        await next(command);
+        
+        Console.WriteLine($"After executing command: {command.GetType().Name}");
     }
 }
 ```

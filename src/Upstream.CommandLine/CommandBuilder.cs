@@ -54,7 +54,7 @@ namespace Upstream.CommandLine
         }
 
         public void AddMiddleware<TMiddleware>(MiddlewareOrder order = MiddlewareOrder.Default)
-            where TMiddleware : class, ICommandMiddleware
+            where TMiddleware : class, ICommandInvocationMiddleware
         {
             _services.TryAddSingleton<TMiddleware>();
 
@@ -63,7 +63,7 @@ namespace Upstream.CommandLine
         }
 
         public void AddMiddleware<TMiddleware, TImplementation>(MiddlewareOrder order = MiddlewareOrder.Default)
-            where TMiddleware : class, ICommandMiddleware
+            where TMiddleware : class, ICommandInvocationMiddleware
             where TImplementation : class, TMiddleware
         {
             _services.TryAddSingleton<TMiddleware, TImplementation>();

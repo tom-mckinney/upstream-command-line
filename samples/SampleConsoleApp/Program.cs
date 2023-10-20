@@ -49,12 +49,13 @@ namespace SampleConsoleApp
                     });
                     builder.AddCommand<NestedCommandHandler, NestedCommandHandler.WumboCommand>();
                 })
-                .AddMiddleware<BlueMiddleware>(MiddlewareOrder.Configuration)
-                .AddMiddleware<RedMiddleware>(MiddlewareOrder.ErrorReporting)
+                .AddMiddleware<BlueInvocationMiddleware>(MiddlewareOrder.Configuration)
+                .AddMiddleware<RedInvocationMiddleware>(MiddlewareOrder.ErrorReporting)
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton<IRandomService, RandomService>();
                     services.AddSingleton<IDeterministicService, DeterministicService>();
+                    services.AddSingleton<ICommandHandlerMiddleware, CommandTypeMiddleware>();
                 })
                 .UseExceptionHandler(e =>
                 {
