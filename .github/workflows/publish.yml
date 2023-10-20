@@ -24,7 +24,7 @@ jobs:
     name: Publish package
     needs: [test]
     if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
     steps:
