@@ -62,7 +62,7 @@ namespace Upstream.CommandLine.Benchmarks.Experiments
         {
             var application = new CommandLineApplication()
                 .AddCommand<FooHandler, FooHandler.FooCommand>()
-                .AddMiddleware<UselessMiddleware>();
+                .AddMiddleware<UselessInvocationMiddleware>();
 
             return await application.InvokeAsync(_args);
         }
@@ -198,7 +198,7 @@ namespace Upstream.CommandLine.Benchmarks.Experiments
             }
         }
         
-        public class UselessMiddleware : ICommandMiddleware
+        public class UselessInvocationMiddleware : ICommandInvocationMiddleware
         {
             public async Task InvokeAsync(InvocationContext context, Func<InvocationContext, Task> next)
             {

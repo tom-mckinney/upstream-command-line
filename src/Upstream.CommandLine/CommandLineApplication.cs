@@ -112,6 +112,15 @@ namespace Upstream.CommandLine
             return this;
         }
 
+        public CommandLineApplication AddMiddleware<TMiddleware>()
+            where TMiddleware : class, ICommandHandlerMiddleware
+        {
+            // this is pulled from ServiceProvider during handler instantiation
+            _services.AddSingleton<ICommandHandlerMiddleware, TMiddleware>();
+            
+            return this;
+        }
+
         /// <summary>
         /// Adds middleware to the application. Can be used to short-circuit a command or alter the <see cref="ParseResult"/>.
         /// </summary>
@@ -127,13 +136,13 @@ namespace Upstream.CommandLine
         }
 
         /// <summary>
-        /// Adds an implementation of <see cref="ICommandMiddleware"/> to the application that is
+        /// Adds an implementation of <see cref="ICommandInvocationMiddleware"/> to the application that is
         /// invoked via dependency injection.
         /// </summary>
         /// <param name="order">Default position in the middleware pipeline</param>
         /// <typeparam name="TMiddleware">Middleware</typeparam>
         public CommandLineApplication AddMiddleware<TMiddleware>(MiddlewareOrder order = MiddlewareOrder.Default)
-            where TMiddleware : class, ICommandMiddleware
+            where TMiddleware : class, ICommandInvocationMiddleware
         {
             _builder.AddMiddleware<TMiddleware>();
 
@@ -145,7 +154,7 @@ namespace Upstream.CommandLine
         /// <typeparam name="TImplementation">Class implementing <c>TMiddleware</c></typeparam>
         public CommandLineApplication AddMiddleware<TMiddleware, TImplementation>(
             MiddlewareOrder order = MiddlewareOrder.Default)
-            where TMiddleware : class, ICommandMiddleware
+            where TMiddleware : class, ICommandInvocationMiddleware
             where TImplementation : class, TMiddleware
         {
             _builder.AddMiddleware<TMiddleware, TImplementation>();

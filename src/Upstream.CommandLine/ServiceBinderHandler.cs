@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
+using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,11 +14,14 @@ namespace Upstream.CommandLine
             where THandler : class, ICommandHandler<TCommand>
             where TCommand : class
         {
-            return CommandHandler.Create<TCommand, CancellationToken>((command, cancellationToken) =>
+            return CommandHandler.Create<TCommand, CancellationToken>(async (command, cancellationToken) =>
             {
-                var internalHandler = getServiceProvider().GetRequiredService<THandler>();
+                var serviceProvider = getServiceProvider();
+                var handler = serviceProvider.GetRequiredService<THandler>();
+                var commandMiddlewares = serviceProvider.GetService<IEnumerable<ICommandHandlerMiddleware>>();
 
-                return internalHandler.ExecuteAsync(command, cancellationToken);
+                return await new InvocationPipeline<THandler, TCommand>(handler, commandMiddlewares?.ToArray())
+                    .InvokeAsync(command, cancellationToken);
             });
         }
     }
